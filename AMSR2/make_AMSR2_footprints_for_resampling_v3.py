@@ -114,7 +114,7 @@ import math
 import os
 import sys
 sys.path.append("C:/python_packages_cam/local_earth_grid")
-from localearthgrid import *
+from rss_gridding.local_earth_grid import LocalEarthGrid
 from AMSR2_Antenna_Gain import AMSR2_antenna_gain,target_gain
 
 
@@ -126,9 +126,6 @@ make_plots = False
 
 #footprint_type = 'target'
 footprint_type = 'source'
-
-output_path_binary = 'L:/access/resampling/AMSR2/source_gains_v2/'
-output_path_netcdf = 'L:/access/resampling/AMSR2/source_gains_v2_nc/'
 
 #This returns locations with the center lat/lon arrays set to zero by translation
 if footprint_type == 'source':
@@ -143,9 +140,6 @@ else:
     raise ValueError(f'footprint type "{footprint_type}" not valid')
 
 #Write out the locations to text file
-
-
-
 
 #1km spacing very close to Frank's 0.01 degree spacing
 grid = LocalEarthGrid(center_lon = 0.0,center_lat = 0.0,
@@ -163,12 +157,12 @@ y = grid.ylocs*1000.0
 slant_range = 1114000.
 theta = 55.0
 
-for jfreq in [2]:
+for jfreq in [1]:
     write_footprint_locations(lats,lons,footprint_type,band=jfreq)
 
 
     if jfreq <= 1:
-        target_size = 50
+        target_size = 30
     else:
         target_size = 30
 

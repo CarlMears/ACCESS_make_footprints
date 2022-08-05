@@ -15,46 +15,36 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
+import os
 from AMSR2_Antenna_Gain import *
 
-
-sin_anglim   = np.array([0.105,    0.105,     0.0524,   0.0524,   0.0262,   0.000,  0.0262 ,    0.0262],dtype=np.float64)
-ant_approx_a = np.array([4.343e-6, 2.096e-6,	1.890e-6, 1.623e-6, 7.248e-7, 0.000,  2.070e-6,   2.070e-6],dtype=np.float64)
-ant_approx_b = np.array([6.892e-4, 4.059e-4,	3.727e-4, 7.251e-4, 3.051e-4, 0.000,  2.381e-4,   2.381e-4],dtype=np.float64)
-ant_approx_c = np.array([0.503,    0.662,     1.391,    1.804,    1.964,    0.000,  4.593,      4.593],dtype=np.float64)
-ant_approx_d = np.array([0.651,    1.345, 	4.844,    4.721,    15.18,    0.000,  79.785,     79.785],dtype=np.float64)
-
 jaxa_width = [1.8,1.2,0.65,0.75,0.35]
-fig = plt.figure()
-ax = fig.add_subplot(1,1,1)
+fig,ax = plt.subplots(figsize=[8,5.5])
 
 for jfreq in range(0,5):
-    anglim =   np.rad2deg(np.arcsin(sin_anglim[jfreq]))
-    coeff_a =  ant_approx_a[jfreq]
-    coeff_b =  ant_approx_b[jfreq]
-    coeff_c =  ant_approx_c[jfreq]
-    coeff_d =  ant_approx_d[jfreq]
-
-    #print(f"anglim = {anglim:.3f}")
 
     delta = np.arange(0,70001).astype(np.float64)*0.0001
     sind_delta = np.sin(np.deg2rad(delta))
 
-    #gain = coeff_a + coeff_b*np.exp(-coeff_c*delta) + 	np.exp(-coeff_d*delta*delta)
-    gain = AMSRE_antenna_gain(delta,jfreq)
+    gain = AMSR2_antenna_gain(delta,jfreq)
     mx = gain[0]
     half_max_angle = np.nanmin(delta[gain < 0.5*mx])
     print(jfreq,2.0*half_max_angle,1.0/(2.0*half_max_angle/jaxa_width[jfreq]))
 
     ax.plot(delta,gain)
-    #ax.plot(delta,gain2,color='blue')
-    #ax.plot(delta,gain*sind_delta,color='red')
-
-    gain[delta > anglim] = 1.0e-6
-
     qsum = np.sum(gain*sind_delta)
     sumgain = qsum*2.0*np.pi*np.deg2rad(0.0001)
+
 ax.set_xlim([0.0,3.0])
+ax.tick_params(axis='both',direction='in',labelsize=14)
+ax.set_xlabel('Angle from Boresight (Degrees)',fontsize=16)
+ax.set_ylabel('Relative Gain',fontsize=16)
+plt_path = Path('M:/job_access/docs/ResamplingPaper/figures')
+tif_file = plt_path / 'Figure_02' / 'Figure_02.tif'
+os.makedirs(tif_file.parent,exist_ok = True)
+print(tif_file)
+fig.savefig(tif_file,bbox_inches = 'tight',dpi=210)
 plt.show()
 #         ok = delta <= anglim
 

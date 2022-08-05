@@ -28,9 +28,10 @@
 #  jaxa_width = [1.8,1.2,0.65,0.75,0.35]
 #  89 has not been addressed yet....
 
+import numpy as np
 
 def AMSR2_antenna_gain(delta,band):
-    import numpy as np
+    
     #                          0         1          2         3         4        5       6            7
     #                         7GHZ      11GHZ      19GHZ     24GHZ     37GHZ          
     sin_anglim   = np.array([0.105,    0.105,     0.0524,   0.0524,   0.0262,   0.000,  0.0262 ,    0.0262],dtype=np.float64)
@@ -50,6 +51,20 @@ def AMSR2_antenna_gain(delta,band):
     gain = coeff_a + coeff_b*np.exp(-coeff_c*delta) + 	np.exp(-coeff_d*delta*delta)
     
     return gain
+
+def print_AMSR2_coefficients():
+
+    freq = np.array([7.0,11.0,19.0,24.0,37.0])
+
+    ant_approx_a = np.array([4.343e-6, 2.096e-6,	1.890e-6, 1.623e-6, 7.248e-7, 0.000,  2.070e-6,   2.070e-6],dtype=np.float64)
+    ant_approx_b = np.array([6.892e-4, 4.059e-4,	3.727e-4, 7.251e-4, 3.051e-4, 0.000,  2.381e-4,   2.381e-4],dtype=np.float64)
+    ant_approx_c = np.array([0.503,    0.662,     1.391,    1.804,    1.964,    0.000,  4.593,      4.593],dtype=np.float64)
+    ant_approx_d = np.array([0.651,    1.345, 	4.844,    4.721,    15.18,    0.000,  79.785,     79.785],dtype=np.float64)
+
+    angle_scale_fact = np.array([0.8721,0.8356,0.8591,0.9786,0.8185])
+
+    for i in range(1,5):
+        print(f'{freq[i]} {ant_approx_a[i]} {ant_approx_b[i]} {ant_approx_c[i]/angle_scale_fact[i]} {ant_approx_d[i]/(angle_scale_fact[i]*angle_scale_fact[i])}')
 
 def AMSRE_antenna_gain(delta,band):
     import numpy as np
@@ -87,3 +102,6 @@ def target_gain(delta_km,diameter_in_km = 30.0):
     gain = coeff_a + coeff_b*np.exp(-coeff_c*delta) + 	np.exp(-coeff_d*delta*delta)
     
     return gain
+
+if __name__ == '__main__':
+    print_AMSR2_coefficients()

@@ -76,7 +76,7 @@ if __name__ == '__main__':
     
     sat_name = 'AMSR2'
     beamwidth = 30
-    band_num = 4
+    band_num = 1
     
     dlat = np.zeros((485))
     dlon = np.zeros((485))
@@ -193,7 +193,7 @@ if __name__ == '__main__':
                 diff_ax.plot([-l,l],[0.0,0.0])
                 fig.tight_layout(h_pad=2)
 
-                png_path = 'L:/access/resampling/AMSR2/resample_gains_v2/circular_30km/plots/'
+                png_path = 'L:/access/resampling/AMSR2/resample_gains_v3/circular_30km/plots/'
                 os.makedirs(png_path,exist_ok = True)
                 png_file = f'{png_path}footprint_compare_band_{band_num:02d}_s{kscan:02d}_c{fov:03d}.png'
                 fig.savefig(png_file)
