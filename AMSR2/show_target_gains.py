@@ -75,7 +75,7 @@ if __name__ == '__main__':
     target_lats,target_lons = read_location_file(sat_name='AMSR2',beamwidth=30)
     
     sat_name = 'AMSR2'
-    beamwidth = 30
+    beamwidth = 70
     band_num = 1
     
     dlat = np.zeros((485))
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     plot_figs = True
     for kscan in [1]:
         #for fov in [1,5,11,20,21,243]:
-        for fov in [1,5,11,20,21,242,243]:
+        for fov in [20]:
             kscan_source =int((1+kscan)/2+14)
             fov_source = int((fov+1)/2)
 
@@ -121,7 +121,7 @@ if __name__ == '__main__':
                                                                 verbose = False)  
             
             target_gain = target_gain/np.sum(target_gain)
-            resample_gain = resample_gain/np.sum(target_gain)
+            resample_gain = resample_gain/np.sum(resample_gain)
 
             ilat_max_source, ilon_max_source = np.unravel_index(source_gain.argmax(),source_gain.shape)
             ilat_max_target, ilon_max_target = np.unravel_index(target_gain.argmax(),target_gain.shape)
@@ -145,7 +145,7 @@ if __name__ == '__main__':
             print(f'Resample Location = : {lat_max_resample:.3f}, {lon_max_resample:.3f}')
 
 
-            l = 50
+            l = 70
             source_sub = source_gain[ilat_max_target-l:ilat_max_target+l+1,ilon_max_target-l:ilon_max_target+l+1]
             target_sub = target_gain[ilat_max_target-l:ilat_max_target+l+1,ilon_max_target-l:ilon_max_target+l+1]
             resample_sub  = resample_gain [ilat_max_target-l:ilat_max_target+l+1,ilon_max_target-l:ilon_max_target+l+1]
@@ -154,11 +154,12 @@ if __name__ == '__main__':
 
             max = np.nanmax(target_sub)
             target_sub = target_sub/max
+
             resample_sub = resample_sub/max
             diff = resample_sub-target_sub
 
             if plot_figs:
-                xvals = np.arange(-50,51)
+                xvals = np.arange(-l,l+1)
                 yvals = xvals
 
                 # fig,ax = plt.subplots()
@@ -187,13 +188,13 @@ if __name__ == '__main__':
                         title=f'Resampled Pattern, FOV = {fov:03d}', xtitle='EW distance (km)', ytitle='NS distance (km),',cmap='BrBG',plt_colorbar = True,fig=fig,subplot=223)
                 resample_ax.plot([0.0,0.0],[-l,l])
                 resample_ax.plot([-l,l],[0.0,0.0])
-                diff_fig,diff_ax = plot_2d_array(diff, xvals, yvals,zrange=(-0.05,0.05), 
+                diff_fig,diff_ax = plot_2d_array(diff, xvals, yvals,zrange=(-0.2,0.2), 
                         title=f'Resampled - Target Pattern, FOV = {fov:03d}', xtitle='EW distance (km)', ytitle='NS distance (km),',cmap='BrBG',plt_colorbar = True,fig=fig,subplot=224)
                 diff_ax.plot([0.0,0.0],[-l,l])
                 diff_ax.plot([-l,l],[0.0,0.0])
                 fig.tight_layout(h_pad=2)
 
-                png_path = 'L:/access/resampling/AMSR2/resample_gains_v3/circular_30km/plots/'
+                png_path = f'L:/access/resampling/AMSR2/resample_gains_v3/circular_{beamwidth:02d}km/plots/'
                 os.makedirs(png_path,exist_ok = True)
                 png_file = f'{png_path}footprint_compare_band_{band_num:02d}_s{kscan:02d}_c{fov:03d}.png'
                 fig.savefig(png_file)

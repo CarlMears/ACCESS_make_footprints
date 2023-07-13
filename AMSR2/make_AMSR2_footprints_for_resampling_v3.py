@@ -14,6 +14,15 @@
 #  converted to python so I can see what's going on
 
 import numpy as np 
+import xarray as xr 
+from matplotlib import pyplot as plt
+from matplotlib import cm
+import math
+import os
+import sys
+#sys.path.append("C:/python_packages_cam/local_earth_grid")
+from AMSR2_Antenna_Gain import AMSR2_antenna_gain,target_gain
+from rss_gridding.local_earth_grid import LocalEarthGrid
 
 orbit = 2
 tdr_path = 'L:/access/resampling/AMSR2/tdr/'
@@ -84,7 +93,7 @@ def find_AMSR2_target_locations():
 
     return lats,lons,azim
 
-def write_footprint_locations(lats,lons,footprint_type,band = 2):
+def write_footprint_locations(lats,lons,azim,footprint_type,band = 2):
     import os
 
     if footprint_type == 'target':
@@ -101,41 +110,24 @@ def write_footprint_locations(lats,lons,footprint_type,band = 2):
                 if footprint_type == 'target':
                     f.write(f' {iscan:04d} {ifov+1:04d} {lats[iscan,ifov]:12.5f} {lons[iscan,ifov]:12.5f}\n')
                 else:
-                    f.write(f' {band:04d} {iscan+1:04d} {ifov+1:04d} {lats[iscan,ifov]:12.5f} {lons[iscan,ifov]:12.5f}\n')
+                    f.write(f' {band:04d} {iscan+1:04d} {ifov+1:04d} {lats[iscan,ifov]:12.5f} {lons[iscan,ifov]:12.5f} {azim[iscan,ifov]:12.5f}\n')
                    
 
-
-    
-
-import xarray as xr 
-from matplotlib import pyplot as plt
-from matplotlib import cm
-import math
-import os
-import sys
-sys.path.append("C:/python_packages_cam/local_earth_grid")
-from rss_gridding.local_earth_grid import LocalEarthGrid
-from AMSR2_Antenna_Gain import AMSR2_antenna_gain,target_gain
 
 
 plt.rcParams.update({'font.size': 18})
 
 freq_names = ['7GHz','11GHz','19GHz','24 GHz','37 GHz']
 
-make_plots = False
+make_plots = True
 
 #footprint_type = 'target'
 footprint_type = 'source'
 
-#This returns locations with the center lat/lon arrays set to zero by translation
 if footprint_type == 'source':
     lats,lons,azim = find_AMSR2_source_locations()
-    output_path_binary = 'L:/access/resampling/AMSR2/source_gains_v3/'
-    output_path_netcdf = 'L:/access/resampling/AMSR2/source_gains_v3_nc/'
 elif footprint_type == 'target':
-    lats,lons,azim = find_AMSR2_target_locations()
-    output_path_binary = 'L:/access/resampling/AMSR2/target_gains_v3/'
-    output_path_netcdf = 'L:/access/resampling/AMSR2/target_gains_v3_nc/'   
+    lats,lons,azim = find_AMSR2_target_locations() 
 else:
     raise ValueError(f'footprint type "{footprint_type}" not valid')
 
@@ -157,15 +149,22 @@ y = grid.ylocs*1000.0
 slant_range = 1114000.
 theta = 55.0
 
-for jfreq in [1]:
-    write_footprint_locations(lats,lons,footprint_type,band=jfreq)
+for jfreq in [0,1,2,3,4]:
+#for jfreq in [0]:
+    write_footprint_locations(lats,lons,azim,footprint_type,band=jfreq)
 
+    #continue
+    target_size = 60
 
-    if jfreq <= 1:
-        target_size = 30
+    if footprint_type == 'source':
+        output_path_binary = 'L:/access/resampling/AMSR2/source_gains_v3/'
+        output_path_netcdf = 'L:/access/resampling/AMSR2/source_gains_v3_nc/'
+    elif footprint_type == 'target':
+        output_path_binary = f'L:/access/resampling/AMSR2/target_gains_v2/{target_size:02d}km/'
+        output_path_netcdf = f'L:/access/resampling/AMSR2/target_gains_v2_nc/{target_size:02d}km/' 
     else:
-        target_size = 30
-
+        raise ValueError(f'footprint type "{footprint_type}" not valid')
+    os.makedirs(output_path_binary,exist_ok=True)
     sz = lats.shape
     ifov_end = sz[1]
     iscan_end = sz[0]
@@ -210,13 +209,17 @@ for jfreq in [1]:
 
             # store it in the local grid instance
             grid.setdata(gain,name='Single')
+ 
             if make_plots:
-                grid.adddata(gain,name='Sum')
+                if ifov%30 == 3:
+                    grid.adddata(gain,name='Sum')
             
             output_path_binary2 = f'{output_path_binary}band_{jfreq:02d}/'
             os.makedirs(output_path_binary2,exist_ok = True)
             source_file_name = f'{output_path_binary2}s{iscan+1:02d}c{ifov+1:03d}.dat'
-            grid.write_binary(outfile = source_file_name,name='Single') 
+
+            #grid.print_amplitude_stats(name='Single')
+            grid.write_binary(outfile = source_file_name,name='Single',save_thres=0.0001) 
 
     #plot it
     if make_plots:
@@ -226,7 +229,7 @@ for jfreq in [1]:
         grid.contourplot(name='Sum',
                         units='Footprint Weight',
                         title=f'{footprint_type} footprints, {freq_names[jfreq]}',
-                        fig=fig0,
+                        fig_in=fig0,
                         vmin=0.0,vmax=1.0,
                         cmap = cm.viridis,
                         plt_contours = False,

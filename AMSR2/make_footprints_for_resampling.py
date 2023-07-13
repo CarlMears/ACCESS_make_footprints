@@ -114,7 +114,7 @@ import math
 import os
 import sys
 sys.path.append("C:/python_packages_cam/local_earth_grid")
-from localearthgrid import *
+from rss_gridding.local_earth_grid import *
 from AMSR2_Antenna_Gain import AMSR2_antenna_gain,target_gain
 
 
@@ -124,8 +124,8 @@ freq_names = ['7GHz','11GHz','19GHz','24 GHz','37 GHz']
 
 make_plots = False
 
-#footprint_type = 'target'
-footprint_type = 'source'
+footprint_type = 'target'
+#footprint_type = 'source'
 
 output_path_binary = 'L:/access/resampling/AMSR2/source_gains_v2/'
 output_path_netcdf = 'L:/access/resampling/AMSR2/source_gains_v2_nc/'
